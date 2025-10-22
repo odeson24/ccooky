@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitLab Merge Requests</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>GitLab Merge Requests</h1>
+            <div class="header-info">
+                <span id="project-info"></span>
+                <span id="connection-status" class="status-badge">Checking...</span>
+            </div>
+        </header>
+
+        <div class="controls">
+            <div class="filter-group">
+                <label for="state-filter">State:</label>
+                <select id="state-filter">
+                    <option value="opened">Opened</option>
+                    <option value="merged">Merged</option>
+                    <option value="closed">Closed</option>
+                    <option value="all">All</option>
+                </select>
+            </div>
+            <button id="refresh-btn" class="btn btn-primary">Refresh</button>
+        </div>
+
+        <div id="loading" class="loading hidden">
+            <div class="spinner"></div>
+            <p>Loading merge requests...</p>
+        </div>
+
+        <div id="error" class="error hidden"></div>
+
+        <div id="mr-list" class="mr-list"></div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
