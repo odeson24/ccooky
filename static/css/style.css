@@ -266,6 +266,85 @@ select:focus {
     color: white;
 }
 
+/* ClickUp Task Styles */
+.clickup-task {
+    margin-top: 12px;
+    padding: 12px;
+    background: linear-gradient(135deg, #7b68ee 0%, #9370db 100%);
+    border-radius: 6px;
+    border-left: 4px solid #6b5cd6;
+}
+
+.clickup-header {
+    margin-bottom: 8px;
+    color: white;
+}
+
+.clickup-header strong {
+    font-size: 0.9em;
+    margin-right: 8px;
+}
+
+.clickup-link {
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+    transition: border-color 0.3s;
+}
+
+.clickup-link:hover {
+    border-bottom-color: white;
+}
+
+.clickup-meta {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.clickup-status {
+    padding: 4px 10px;
+    background: rgba(255, 255, 255, 0.9);
+    color: #6b5cd6;
+    border-radius: 4px;
+    font-size: 0.85em;
+    font-weight: 600;
+}
+
+.clickup-priority {
+    padding: 4px 10px;
+    background: rgba(255, 255, 255, 0.9);
+    color: #e2433b;
+    border-radius: 4px;
+    font-size: 0.85em;
+    font-weight: 600;
+}
+
+.clickup-tags {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+
+.clickup-tag {
+    padding: 3px 8px;
+    background: rgba(255, 255, 255, 0.85);
+    color: #6b5cd6;
+    border-radius: 3px;
+    font-size: 0.75em;
+    font-weight: 600;
+}
+
+.clickup-error {
+    color: #fecaca;
+    font-size: 0.85em;
+    font-style: italic;
+    margin-left: 8px;
+}
+
 .empty-state {
     text-align: center;
     padding: 60px 30px;

@@ -114,6 +114,45 @@ function createMergeRequestElement(mr) {
            </div>`
         : '';
 
+    // Format ClickUp task information
+    let clickupTask = '';
+    if (mr.clickup_task) {
+        const task = mr.clickup_task;
+        const taskTags = task.tags && task.tags.length > 0
+            ? `<div class="clickup-tags">
+                ${task.tags.map(tag => `<span class="clickup-tag">${escapeHtml(tag)}</span>`).join('')}
+               </div>`
+            : '';
+
+        const priorityText = task.priority ? `Priority ${task.priority}` : '';
+
+        clickupTask = `
+            <div class="clickup-task">
+                <div class="clickup-header">
+                    <strong>ClickUp Task:</strong>
+                    <a href="${task.url}" target="_blank" rel="noopener noreferrer" class="clickup-link">
+                        ${escapeHtml(task.name)}
+                    </a>
+                </div>
+                <div class="clickup-meta">
+                    <span class="clickup-status">${escapeHtml(task.status)}</span>
+                    ${priorityText ? `<span class="clickup-priority">${escapeHtml(priorityText)}</span>` : ''}
+                </div>
+                ${taskTags}
+            </div>
+        `;
+    } else if (mr.clickup_task_id) {
+        // Task ID found but couldn't fetch task details
+        clickupTask = `
+            <div class="clickup-task">
+                <div class="clickup-header">
+                    <strong>ClickUp Task ID:</strong> CU-${escapeHtml(mr.clickup_task_id)}
+                    <span class="clickup-error">(Could not load task details)</span>
+                </div>
+            </div>
+        `;
+    }
+
     div.innerHTML = `
         <div class="mr-header">
             <div>
@@ -147,6 +186,7 @@ function createMergeRequestElement(mr) {
             ` : ''}
         </div>
         ${description}
+        ${clickupTask}
         ${labels}
     `;
 

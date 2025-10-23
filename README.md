@@ -10,6 +10,7 @@ A clean and modern web application to view and filter GitLab merge requests from
 - Real-time connection status
 - Detailed MR information including author, dates, labels, and descriptions
 - Direct links to merge requests
+- **ClickUp Integration**: Automatically displays ClickUp task information for merge requests with branch names containing ClickUp task IDs (format: `...CU-{task-id}`)
 
 ## Prerequisites
 
@@ -51,6 +52,9 @@ Edit `.env` and add your GitLab configuration:
 GITLAB_URL=https://gitlab.com
 GITLAB_PROJECT_ID=your_project_id
 GITLAB_PRIVATE_TOKEN=your_private_token
+
+# Optional: ClickUp integration
+CLICKUP_API_TOKEN=your_clickup_api_token
 ```
 
 ## Getting GitLab Credentials
@@ -76,6 +80,32 @@ You can find your project ID in several ways:
    - `api` (full API access)
    - `read_api` (read-only API access)
 4. Copy the token immediately (you won't be able to see it again)
+
+## ClickUp Integration (Optional)
+
+The application automatically displays ClickUp task information for merge requests when:
+1. The branch name contains a ClickUp task ID in the format: `...CU-{task-id}`
+   - Example: `feature/add-login-CU-abc123`
+   - Example: `bugfix/fix-auth-CU-xyz789`
+2. A ClickUp API token is configured in your `.env` file
+
+### Getting a ClickUp API Token
+
+1. Log in to your ClickUp account
+2. Click on your avatar in the bottom-left corner
+3. Go to Settings > Apps
+4. Click "Generate" under API Token
+5. Copy the token and add it to your `.env` file as `CLICKUP_API_TOKEN`
+
+### What ClickUp Information is Displayed
+
+When a ClickUp task is found, the application displays:
+- Task name with a direct link to the task
+- Task status
+- Task priority (if set)
+- Task tags (if any)
+
+**Note:** If no ClickUp API token is configured, the application will still work normally but won't display ClickUp task information.
 
 ## Usage
 
@@ -132,9 +162,15 @@ curl http://localhost:5000/api/health
 
 Edit `.env` to customize:
 
+**GitLab Configuration:**
 - `GITLAB_URL`: Your GitLab instance URL (default: https://gitlab.com)
 - `GITLAB_PROJECT_ID`: Your project ID or path
 - `GITLAB_PRIVATE_TOKEN`: Your personal access token
+
+**ClickUp Configuration (Optional):**
+- `CLICKUP_API_TOKEN`: Your ClickUp API token (optional - enables ClickUp task integration)
+
+**Application Configuration:**
 - `PORT`: Application port (default: 5000)
 - `DEBUG`: Enable debug mode (default: False)
 
@@ -203,7 +239,9 @@ uvicorn app:app --host 0.0.0.0 --port 5000 --workers 4
 
 - **Backend**: FastAPI (Python)
 - **Frontend**: Vanilla JavaScript, HTML5, CSS3
-- **API**: GitLab REST API v4
+- **APIs**:
+  - GitLab REST API v4
+  - ClickUp REST API v2 (optional)
 - **HTTP Client**: requests library
 
 ## License
