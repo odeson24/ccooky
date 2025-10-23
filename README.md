@@ -142,7 +142,7 @@ Edit `.env` to customize:
 
 ```
 ccooky/
-├── app.py                  # Flask application
+├── app.py                  # FastAPI application
 ├── requirements.txt        # Python dependencies
 ├── .env.example           # Example environment configuration
 ├── .gitignore             # Git ignore file
@@ -186,17 +186,22 @@ To run in development mode with auto-reload:
 python app.py
 ```
 
+Or run directly with uvicorn:
+```bash
+uvicorn app:app --reload --host 0.0.0.0 --port 5000
+```
+
 ## Production Deployment
 
-For production, use a WSGI server like Gunicorn:
+For production, use uvicorn with multiple workers:
 
 ```bash
-gunicorn -w 4 -b 0.0.0.0:5000 app:app
+uvicorn app:app --host 0.0.0.0 --port 5000 --workers 4
 ```
 
 ## Technologies Used
 
-- **Backend**: Flask (Python)
+- **Backend**: FastAPI (Python)
 - **Frontend**: Vanilla JavaScript, HTML5, CSS3
 - **API**: GitLab REST API v4
 - **HTTP Client**: requests library
