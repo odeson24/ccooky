@@ -1,11 +1,13 @@
 // DOM elements
 const stateFilter = document.getElementById('state-filter');
 const refreshBtn = document.getElementById('refresh-btn');
+const clearCacheBtn = document.getElementById('clear-cache-btn');
 const loading = document.getElementById('loading');
 const errorDiv = document.getElementById('error');
 const mrList = document.getElementById('mr-list');
 const projectInfo = document.getElementById('project-info');
 const connectionStatus = document.getElementById('connection-status');
+const cacheStatus = document.getElementById('cache-status');
 
 // State
 let currentState = 'opened';
@@ -22,8 +24,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     refreshBtn.addEventListener('click', () => {
-        loadMergeRequests();
+        loadMergeRequests(true);  // Force refresh
     });
+
+    if (clearCacheBtn) {
+        clearCacheBtn.addEventListener('click', async () => {
+            await clearCache();
+        });
+    }
 });
 
 // Check API health and configuration
@@ -37,6 +45,12 @@ async function checkHealth() {
             connectionStatus.classList.add('connected');
             connectionStatus.classList.remove('error');
             projectInfo.textContent = `Project: ${data.project_id}`;
+
+            // Show cache stats if available
+            if (data.cache_stats && cacheStatus) {
+                const stats = data.cache_stats;
+                cacheStatus.textContent = `Cache: ${stats.mr_cache_count} MRs, ${stats.clickup_cache_count} tasks (TTL: ${stats.mr_ttl_minutes}m)`;
+            }
         } else {
             connectionStatus.textContent = 'Not Configured';
             connectionStatus.classList.add('error');
@@ -52,23 +66,69 @@ async function checkHealth() {
 }
 
 // Load merge requests from API
-async function loadMergeRequests() {
+async function loadMergeRequests(forceRefresh = false) {
     showLoading();
     hideError();
 
     try {
-        const response = await fetch(`/api/merge-requests?state=${currentState}&per_page=50`);
+        const url = `/api/merge-requests?state=${currentState}&per_page=50${forceRefresh ? '&force_refresh=true' : ''}`;
+        const response = await fetch(url);
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to fetch merge requests');
+            throw new Error(errorData.detail?.error || errorData.error || 'Failed to fetch merge requests');
         }
 
-        const mergeRequests = await response.json();
+        const responseData = await response.json();
+
+        // Handle new response format with metadata
+        const mergeRequests = responseData.data || responseData;
+        const fromCache = responseData.from_cache || false;
+
+        // Update cache status indicator
+        if (cacheStatus && responseData.from_cache !== undefined) {
+            const cacheIndicator = fromCache ? ' (cached)' : ' (fresh)';
+            const currentText = cacheStatus.textContent;
+            if (currentText) {
+                cacheStatus.textContent = currentText.replace(/ \((cached|fresh)\)$/, '') + cacheIndicator;
+            }
+        }
+
         displayMergeRequests(mergeRequests);
+
+        // Refresh health check to update cache stats
+        checkHealth();
     } catch (error) {
         showError(error.message);
         console.error('Error loading merge requests:', error);
+    } finally {
+        hideLoading();
+    }
+}
+
+// Clear cache
+async function clearCache() {
+    try {
+        showLoading();
+        const response = await fetch('/api/cache/clear', { method: 'POST' });
+
+        if (!response.ok) {
+            throw new Error('Failed to clear cache');
+        }
+
+        // Reload merge requests after clearing cache
+        await loadMergeRequests(true);
+
+        // Show success message briefly
+        const successMsg = document.createElement('div');
+        successMsg.className = 'success-message';
+        successMsg.textContent = 'Cache cleared successfully';
+        document.querySelector('.container').prepend(successMsg);
+        setTimeout(() => successMsg.remove(), 3000);
+
+    } catch (error) {
+        showError('Failed to clear cache: ' + error.message);
+        console.error('Error clearing cache:', error);
     } finally {
         hideLoading();
     }

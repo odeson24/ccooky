@@ -13,6 +13,7 @@
             <div class="header-info">
                 <span id="project-info"></span>
                 <span id="connection-status" class="status-badge">Checking...</span>
+                <span id="cache-status" class="status-badge cache-badge">Cache: loading...</span>
             </div>
         </header>
 
@@ -26,7 +27,10 @@
                     <option value="all">All</option>
                 </select>
             </div>
-            <button id="refresh-btn" class="btn btn-primary">Refresh</button>
+            <div class="button-group">
+                <button id="refresh-btn" class="btn btn-primary">Refresh</button>
+                <button id="clear-cache-btn" class="btn btn-secondary">Clear Cache</button>
+            </div>
         </div>
 
         <div id="loading" class="loading hidden">

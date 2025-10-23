@@ -11,6 +11,9 @@ A clean and modern web application to view and filter GitLab merge requests from
 - Detailed MR information including author, dates, labels, and descriptions
 - Direct links to merge requests
 - **ClickUp Integration**: Automatically displays ClickUp task information for merge requests with branch names containing ClickUp task IDs (format: `...CU-{task-id}`)
+- **Performance Caching**: SQLite-based caching with configurable TTL for fast loading
+- **Auto-refresh**: Background job to keep cache updated automatically
+- **Cache Management**: Clear cache and force refresh capabilities
 
 ## Prerequisites
 
@@ -107,6 +110,43 @@ When a ClickUp task is found, the application displays:
 
 **Note:** If no ClickUp API token is configured, the application will still work normally but won't display ClickUp task information.
 
+## Performance & Caching
+
+The application uses SQLite-based caching to improve performance and reduce API calls:
+
+### How It Works
+
+1. **First Request**: Data is fetched from GitLab and ClickUp APIs and cached in the database
+2. **Subsequent Requests**: Data is served from cache (much faster) until TTL expires
+3. **Auto-refresh**: Background job automatically refreshes cache at configurable intervals
+4. **Manual Control**: Use "Refresh" to force fetch fresh data or "Clear Cache" to reset
+
+### Cache Configuration
+
+Configure cache behavior in your `.env` file:
+
+```env
+# Cache TTL (Time To Live) in minutes
+MR_CACHE_TTL_MINUTES=5          # How long to cache merge requests (default: 5)
+CLICKUP_CACHE_TTL_MINUTES=10    # How long to cache ClickUp tasks (default: 10)
+
+# Auto-refresh interval in minutes (0 to disable)
+AUTO_REFRESH_INTERVAL_MINUTES=5  # Background refresh frequency (default: 5, 0=disabled)
+```
+
+### Cache Benefits
+
+- **Faster Load Times**: Cached responses load instantly
+- **Reduced API Rate Limits**: Fewer API calls to GitLab and ClickUp
+- **Better UX**: Immediate response for cached data
+- **Always Fresh**: Auto-refresh keeps data up-to-date
+
+### Cache Indicators
+
+- The UI shows cache status in the header: `Cache: X MRs, Y tasks (TTL: Zm)`
+- MR list shows `(cached)` or `(fresh)` indicator
+- Real-time cache statistics available
+
 ## Usage
 
 1. Start the application:
@@ -151,11 +191,47 @@ curl "http://localhost:5000/api/merge-requests?state=opened&per_page=10"
 GET /api/health
 ```
 
-Returns the application status and configuration info.
+Returns the application status, configuration info, and cache statistics.
 
 Example:
 ```bash
 curl http://localhost:5000/api/health
+```
+
+### Clear Cache
+```
+POST /api/cache/clear
+```
+
+Clears all cached data (merge requests and ClickUp tasks).
+
+Example:
+```bash
+curl -X POST http://localhost:5000/api/cache/clear
+```
+
+### Refresh Cache
+```
+POST /api/cache/refresh
+```
+
+Forces a refresh of all cached data from APIs.
+
+Example:
+```bash
+curl -X POST http://localhost:5000/api/cache/refresh
+```
+
+### Get Cache Statistics
+```
+GET /api/cache/stats
+```
+
+Returns detailed cache statistics.
+
+Example:
+```bash
+curl http://localhost:5000/api/cache/stats
 ```
 
 ## Configuration Options
@@ -170,6 +246,11 @@ Edit `.env` to customize:
 **ClickUp Configuration (Optional):**
 - `CLICKUP_API_TOKEN`: Your ClickUp API token (optional - enables ClickUp task integration)
 
+**Cache Configuration:**
+- `MR_CACHE_TTL_MINUTES`: Merge request cache TTL in minutes (default: 5)
+- `CLICKUP_CACHE_TTL_MINUTES`: ClickUp task cache TTL in minutes (default: 10)
+- `AUTO_REFRESH_INTERVAL_MINUTES`: Auto-refresh interval in minutes, 0 to disable (default: 5)
+
 **Application Configuration:**
 - `PORT`: Application port (default: 5000)
 - `DEBUG`: Enable debug mode (default: False)
@@ -179,10 +260,12 @@ Edit `.env` to customize:
 ```
 ccooky/
 ├── app.py                  # FastAPI application
+├── database.py             # Database models and cache manager
 ├── requirements.txt        # Python dependencies
 ├── .env.example           # Example environment configuration
 ├── .gitignore             # Git ignore file
 ├── README.md              # This file
+├── mr_cache.db            # SQLite cache database (auto-created)
 ├── templates/
 │   └── index.html         # Main HTML template
 └── static/
@@ -212,6 +295,19 @@ If you get 404 Not Found:
 - Verify the project ID is correct
 - Check that you have access to the project
 
+### Cache Issues
+
+If cache seems stale or outdated:
+- Click the "Clear Cache" button in the UI
+- Use the API: `curl -X POST http://localhost:5000/api/cache/clear`
+- Adjust `MR_CACHE_TTL_MINUTES` and `CLICKUP_CACHE_TTL_MINUTES` in `.env`
+- Check auto-refresh is enabled: `AUTO_REFRESH_INTERVAL_MINUTES > 0`
+
+If cache database is corrupted:
+- Stop the application
+- Delete `mr_cache.db` file
+- Restart the application (database will be recreated)
+
 ## Development
 
 To run in development mode with auto-reload:
@@ -239,6 +335,9 @@ uvicorn app:app --host 0.0.0.0 --port 5000 --workers 4
 
 - **Backend**: FastAPI (Python)
 - **Frontend**: Vanilla JavaScript, HTML5, CSS3
+- **Database**: SQLite with SQLAlchemy ORM
+- **Caching**: Custom cache manager with TTL
+- **Background Jobs**: APScheduler
 - **APIs**:
   - GitLab REST API v4
   - ClickUp REST API v2 (optional)
